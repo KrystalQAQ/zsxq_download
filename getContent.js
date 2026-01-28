@@ -22,7 +22,7 @@ const headers = {
     'x-timestamp': '1769588269',
     'x-version': '2.88.0',
     'Cookie': 'sensorsdata2015jssdkcross=%7B%22distinct_id%22%3A%221966bb65a794af-05ab826c4cb1d48-26011c51-2359296-1966bb65a7a4bb%22%2C%22first_id%22%3A%22%22%2C%22props%22%3A%7B%22%24latest_traffic_source_type%22%3A%22%E7%9B%B4%E6%8E%A5%E6%B5%81%E9%87%8F%22%2C%22%24latest_search_keyword%22%3A%22%E6%9C%AA%E5%8F%96%E5%88%B0%E5%80%BC_%E7%9B%B4%E6%8E%A5%E6%89%93%E5%BC%80%22%2C%22%24latest_referrer%22%3A%22%22%7D%2C%22identities%22%3A%22eyIkaWRlbnRpdHlfY29va2llX2lkIjoiMTk2NmJiNjVhNzk0YWYtMDVhYjgyNmM0Y2IxZDQ4LTI2MDExYzUxLTIzNTkyOTYtMTk2NmJiNjVhN2E0YmIifQ%3D%3D%22%2C%22history_login_id%22%3A%7B%22name%22%3A%22%22%2C%22value%22%3A%22%22%7D%2C%22%24device_id%22%3A%221966bb65a794af-05ab826c4cb1d48-26011c51-2359296-1966bb65a7a4bb%22%7D; abtest_env=product; zsxq_access_token=388FB36B-3F51-4614-9F81-044EE93D1740_EBEEFFE272079886'
-  }
+}
 
 const MAIN_URL = 'https://articles.zsxq.com/id_w0623chi6x4k.html';
 const OUTPUT_FILE = 'article_urls.json';
@@ -234,6 +234,25 @@ async function saveToPDF(url, filename, browser) {
     }
 }
 
+// 直接通过 Puppeteer 下载/打印 PDF（无需传入浏览器实例）
+async function downloadPdf(url, filename, outputDir = PDF_OUTPUT_DIR) {
+    if (!url || !filename) {
+        throw new Error('url 和 filename 不能为空');
+    }
+
+    const pdfDir = path.resolve(outputDir);
+    if (!fs.existsSync(pdfDir)) {
+        fs.mkdirSync(pdfDir, { recursive: true });
+    }
+    const browser = await puppeteer.launch({
+        // headless: true, // 无头模式
+        // executablePath: "C:\\Users\\cqsczl\\AppData\\Local\\Google\\Chrome\\Application",
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    await saveToPDF(url, filename, browser);
+    await browser.close();
+}
+
 // 保存结果到文件
 function saveResults(results) {
     const output = {
@@ -439,6 +458,12 @@ async function main() {
 }
 
 // 执行主函数
-main().catch(error => {
-    console.error('程序出错:', error);
-});
+if (require.main === module) {
+    main().catch(error => {
+        console.error('程序出错:', error);
+    });
+}
+
+module.exports = {
+    downloadPdf
+};
